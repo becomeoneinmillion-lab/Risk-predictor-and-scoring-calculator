@@ -1,0 +1,1643 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AnaesthScore — Perioperative Risk & Clinical Scales Suite</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            clinical: {
+              50: '#f0fdfa',
+              100: '#ccfbf1',
+              200: '#99f6e4',
+              500: '#14b8a6',
+              600: '#0d9488',
+              700: '#0f766e',
+              800: '#115e59',
+              900: '#134e4a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar for smooth clinical table/modal experience */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.4);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(100, 116, 139, 0.6);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200 selection:bg-teal-500 selection:text-white">
+
+  <!-- Top Sticky Header -->
+  <header class="sticky top-0 z-30 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 gap-4">
+        <!-- Brand -->
+        <div class="flex items-center gap-3 shrink-0">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-600 to-sky-700 flex items-center justify-center text-white shadow-sm">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-lg font-bold tracking-tight text-slate-900 dark:text-white leading-none">AnaesthScore</h1>
+              <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-teal-50 text-teal-700 border border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800">
+                22 Clinical Tools
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 hidden sm:block">Perioperative Risk &amp; Monitoring Reference</p>
+          </div>
+        </div>
+
+        <!-- Search Bar (Desktop & Tablet) -->
+        <div class="flex-1 max-w-xl">
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <input
+              id="searchInput"
+              type="text"
+              placeholder="Search tools, acronyms (RCRI, ARISCAT, STOP-BANG), or parameters..."
+              class="w-full pl-10 pr-10 py-2 text-sm rounded-xl bg-slate-100 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white dark:focus:bg-slate-800 transition"
+            />
+            <button
+              id="clearSearchBtn"
+              onclick="clearSearch()"
+              aria-label="Clear search"
+              class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Theme Toggle -->
+        <div class="flex items-center gap-2 shrink-0">
+          <button
+            id="themeToggle"
+            onclick="toggleDarkMode()"
+            class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition"
+            title="Toggle Light / Dark Mode"
+            aria-label="Toggle Light or Dark Mode"
+          >
+            <!-- Sun Icon -->
+            <svg id="sunIcon" class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <!-- Moon Icon -->
+            <svg id="moonIcon" class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Category Filter Tabs -->
+      <div id="categoryTabs" class="flex items-center gap-2 py-2.5 overflow-x-auto no-scrollbar border-t border-slate-100 dark:border-slate-800/80">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Status & Filter Summary Bar -->
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+        <span id="resultsCount" class="font-semibold text-slate-900 dark:text-white">Showing 22 of 22 tools</span>
+        <span id="activeFilterText" class="hidden sm:inline text-slate-400">• All Categories</span>
+      </div>
+      <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-50/80 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200/70 dark:border-teal-800/60">
+          <span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
+          Interactive Calculators &amp; Selectors Included
+        </span>
+      </div>
+    </div>
+
+    <!-- Tools Grid -->
+    <div id="toolsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <!-- Cards rendered dynamically -->
+    </div>
+
+    <!-- Empty Search State -->
+    <div id="emptyState" class="hidden text-center py-16 px-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
+      <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mx-auto mb-3">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <h3 class="text-base font-semibold text-slate-900 dark:text-white">No matching scoring systems found</h3>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-md mx-auto">Try searching by acronym (e.g., ASA, RCRI, ARISCAT, STOP-BANG, Apfel, BIS, Aldrete) or reset your filters.</p>
+      <button onclick="resetAllFilters()" class="mt-4 px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium transition">
+        Reset Search &amp; Filters
+      </button>
+    </div>
+  </main>
+
+  <!-- Clinical Disclaimer Footer -->
+  <footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+      <p><strong>Clinical Decision Support Notice:</strong> Intended for qualified healthcare professionals as an educational and perioperative reference aid. Always integrate scores with holistic clinical judgment.</p>
+      <span class="font-mono text-[11px] shrink-0 text-slate-400">AnaesthScore • v1.0</span>
+    </div>
+  </footer>
+
+  <!-- Interactive Calculator / Scale Modal -->
+  <div id="toolModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modalTitle" role="dialog" aria-modal="true">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity" onclick="closeModal()"></div>
+
+    <!-- Modal Panel -->
+    <div class="flex min-h-full items-end sm:items-center justify-center p-0 sm:p-4">
+      <div class="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden transform transition-all flex flex-col max-h-[92vh]">
+        
+        <!-- Modal Header -->
+        <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-4 bg-slate-50/70 dark:bg-slate-900">
+          <div>
+            <span id="modalCategoryBadge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mb-1.5"></span>
+            <h2 id="modalTitle" class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white leading-snug"></h2>
+            <p id="modalSubtitle" class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5"></p>
+          </div>
+          <button
+            onclick="closeModal()"
+            class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition shrink-0"
+            aria-label="Close modal"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Modal Body (Scrollable) -->
+        <div id="modalBody" class="p-5 overflow-y-auto space-y-5 flex-1">
+          <!-- Dynamic interactive calculator or reference content -->
+        </div>
+
+        <!-- Live Result & Documentation Footer -->
+        <div id="modalFooter" class="px-5 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/95 space-y-3">
+          <!-- Dynamic score banner + copy button -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 pointer-events-none transition-all duration-300">
+    <div class="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-slate-900 dark:bg-slate-800 text-white text-sm font-medium shadow-lg border border-slate-700">
+      <svg class="w-4 h-4 text-teal-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>
+      <span id="toastMessage">Copied clinical summary to clipboard</span>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. CLINICAL DATA DEFINITIONS (ALL 22 TOOLS ACROSS 5 CATEGORIES)
+    // =========================================================================
+    const CATEGORIES = [
+      { id: 'all', label: 'All Tools', shortLabel: 'All', color: 'slate' },
+      { id: 'preop', label: '1. Preoperative General Risk & Functional Status', shortLabel: '1. Preop & Functional', color: 'sky' },
+      { id: 'airway', label: '2. Airway & Respiratory Risk Assessment', shortLabel: '2. Airway & Resp', color: 'teal' },
+      { id: 'organ', label: '3. Organ-Specific & Complication Risk Scores', shortLabel: '3. Organ & Complication', color: 'indigo' },
+      { id: 'intraop', label: '4. Intraoperative & Regional Monitoring Scales', shortLabel: '4. Intraop Monitoring', color: 'amber' },
+      { id: 'pacu', label: '5. Post-Anesthesia Care Unit (PACU) & Acute Pain', shortLabel: '5. PACU & Pain', color: 'rose' }
+    ];
+
+    const TOOLS = [
+      // --- CATEGORY 1: PREOPERATIVE GENERAL RISK & FUNCTIONAL STATUS (6 Tools) ---
+      {
+        id: 'asa',
+        name: 'ASA Physical Status Classification',
+        acronym: 'ASA PS (I–VI + E)',
+        category: 'preop',
+        type: 'selector',
+        badgeText: 'Interactive Selector',
+        purpose: 'Categorizes baseline physiological health and systemic comorbidities prior to anesthesia and surgery.',
+        threshold: 'Classes I–VI; append "E" for emergency surgery where delay threatens life or limb.',
+        keywords: 'american society anesthesiologists physical status healthy mild severe systemic disease moribund brain dead emergency',
+        options: [
+          { value: 'ASA I', title: 'ASA I — Normal Healthy Patient', desc: 'Healthy, non-smoking, no or minimal alcohol use.', risk: 'Baseline Perioperative Risk (Mortality < 0.05%)', level: 'low' },
+          { value: 'ASA II', title: 'ASA II — Mild Systemic Disease', desc: 'Mild diseases only without substantive functional limitations (e.g., well-controlled HTN/DM, current smoker, social alcohol drinker, pregnancy, obesity 30 < BMI < 40).', risk: 'Low Perioperative Risk (Mortality ~0.2–0.4%)', level: 'low' },
+          { value: 'ASA III', title: 'ASA III — Severe Systemic Disease', desc: 'Substantive functional limitations; one or more moderate-to-severe diseases (e.g., poorly controlled DM/HTN, COPD, morbid obesity BMI ≥40, active hepatitis, implanted pacemaker, ESRD on dialysis, history >3 mo of MI/CVA/TIA/CAD).', risk: 'Moderate-to-High Perioperative Risk (Mortality ~1.8–4.3%)', level: 'moderate' },
+          { value: 'ASA IV', title: 'ASA IV — Severe Systemic Disease (Constant Threat to Life)', desc: 'Recent (<3 mo) MI, CVA, TIA, or CAD/stents, ongoing cardiac ischemia or severe valve dysfunction, severe reduction of ejection fraction, sepsis, DIC, ARD or ESRD not undergoing regularly scheduled dialysis.', risk: 'High Perioperative Risk (Mortality ~7.8–23%)', level: 'high' },
+          { value: 'ASA V', title: 'ASA V — Moribund Patient', desc: 'Not expected to survive without the operation (e.g., ruptured abdominal/thoracic aneurysm, massive trauma, intracranial bleed with mass effect, ischemic bowel with multiple organ dysfunction).', risk: 'Critical / Extreme Mortality Risk (~9.4–51%)', level: 'high' },
+          { value: 'ASA VI', title: 'ASA VI — Declared Brain-Dead Patient', desc: 'A declared brain-dead patient whose organs are being removed for donor purposes.', risk: 'Organ Procurement Protocol', level: 'neutral' }
+        ],
+        hasEmergencyToggle: true
+      },
+      {
+        id: 'mets',
+        name: 'METs (Metabolic Equivalents) Functional Capacity',
+        acronym: 'METs / DASI',
+        category: 'preop',
+        type: 'selector',
+        badgeText: 'Interactive Scale',
+        purpose: 'Estimates preoperative functional aerobic capacity and perioperative cardiopulmonary reserve.',
+        threshold: '< 4 METs (inability to climb one flight of stairs or walk up a hill) indicates poor functional capacity and higher perioperative risk.',
+        keywords: 'metabolic equivalents functional capacity stairs exercise tolerance aerobic cardiac reserve dasi',
+        options: [
+          { value: '1 MET', title: '1 MET — Basal / Self-Care', desc: 'Eating, dressing, using the toilet, walking indoors around the house.', risk: 'Poor Functional Capacity (< 4 METs) — Higher perioperative cardiac risk', level: 'high' },
+          { value: '2–3 METs', title: '2–3 METs — Light Household Activity', desc: 'Walking 1–2 blocks on level ground at 2–3 mph (3.2–4.8 km/h), light housework like dusting or washing dishes.', risk: 'Poor Functional Capacity (< 4 METs) — Evaluate further if elevated surgical risk', level: 'high' },
+          { value: '4 METs', title: '4 METs — Moderate Exertion (Clinical Threshold)', desc: 'Climbing one flight of stairs, walking up a hill, or walking on level ground at 4 mph (6.4 km/h).', risk: 'Adequate Functional Capacity (≥ 4 METs) — Proceed to surgery without stress testing in most guidelines', level: 'low' },
+          { value: '5–7 METs', title: '5–7 METs — Vigorous Recreation', desc: 'Short run, heavy housework (scrubbing floors, moving heavy furniture), moderate recreational activities (golf, dancing, doubles tennis).', risk: 'Good Functional Capacity — Low cardiopulmonary risk', level: 'low' },
+          { value: '≥ 10 METs', title: '≥ 10 METs — Strenuous Aerobic Exercise', desc: 'Strenuous sports such as swimming, singles tennis, football, basketball, or skiing.', risk: 'Excellent Functional Reserve', level: 'low' }
+        ]
+      },
+      {
+        id: 'nsqip',
+        name: 'ACS NSQIP Surgical Risk Calculator',
+        acronym: 'ACS NSQIP',
+        category: 'preop',
+        type: 'reference',
+        badgeText: 'Reference Guide',
+        purpose: 'Estimates 30-day procedure-specific morbidity, mortality, cardiac complications, and length of stay.',
+        threshold: 'Uses ~20 patient factors alongside the exact CPT surgical procedure code to benchmark against national outcomes.',
+        keywords: 'american college surgeons national surgical quality improvement program cpt 30 day morbidity mortality',
+        referenceSections: [
+          {
+            title: 'Core Input Domains (~20 Patient Variables + CPT Code)',
+            items: [
+              'Demographics & Anthropometrics: Age group, Sex, Functional Status (Independent, Partially Dependent, Totally Dependent), BMI.',
+              'Preoperative Clinical Status: ASA Class (I–V), Emergency Case status, Steroid use for chronic condition, Ascites within 30 days, Systemic Sepsis within 48 hours.',
+              'Cardiopulmonary Comorbidities: Ventilator dependence, Disseminated cancer, Diabetes (Oral vs. Insulin), Hypertension requiring medication, CHF in 30 days prior, Dyspnea (Moderate exertion vs. At rest), Current smoker within 1 year, History of severe COPD, Dialysis, Acute Renal Failure.'
+            ]
+          },
+          {
+            title: 'Predicted 30-Day Outcomes',
+            items: [
+              'Serious Complication, Any Complication, Pneumonia, Cardiac Complication (Cardiac Arrest or MI), Surgical Site Infection (SSI), Urinary Tract Infection (UTI), Venous Thromboembolism (VTE), Renal Failure, Readmission, Return to OR, Death, Discharge to Nursing/Rehab Facility, and Predicted Length of Hospital Stay.'
+            ]
+          }
+        ]
+      },
+      {
+        id: 'sort',
+        name: 'SORT (Surgical Outcome Risk Tool)',
+        acronym: 'SORT',
+        category: 'preop',
+        type: 'reference',
+        badgeText: 'Reference & Variables',
+        purpose: 'Rapidly predicts 30-day mortality after inpatient non-cardiac surgery using 6 simple preoperative variables.',
+        threshold: 'Combines ASA grade, urgency, surgical specialty, surgical severity, cancer status, and age ≥ 65 years.',
+        keywords: 'surgical outcome risk tool 30 day mortality inpatient non cardiac surgery urgency specialty severity malignancy',
+        referenceSections: [
+          {
+            title: 'The 6 Preoperative SORT Predictors',
+            items: [
+              '1. ASA Physical Status Grade: ASA III, ASA IV, or ASA V (higher weighting per grade).',
+              '2. Urgency of Surgery: Expedited, Urgent, or Immediate (vs. Elective).',
+              '3. High-Risk Surgical Specialty: Gastrointestinal, Thoracic, or Vascular surgery.',
+              '4. Surgical Severity: Major or Complex-Major (Xmajor) procedure (e.g., AXA-PPP / BUPA schedule).',
+              '5. Active Malignancy: Presence of active cancer.',
+              '6. Patient Age: 65–79 years, or ≥ 80 years.'
+            ]
+          },
+          {
+            title: 'Clinical Application',
+            items: [
+              'Developed and validated in the UK NCEPOD "Knowing the Risk" cohort. Provides rapid, objective 30-day mortality percentages to guide shared decision-making and postoperative critical care (HDU/ICU) bed allocation.'
+            ]
+          }
+        ]
+      },
+      {
+        id: 'ppossum',
+        name: 'P-POSSUM (Portsmouth POSSUM)',
+        acronym: 'P-POSSUM',
+        category: 'preop',
+        type: 'reference',
+        badgeText: 'Reference & Variables',
+        purpose: 'Predicts perioperative morbidity and mortality, primarily in general, colorectal, vascular, and emergency surgery.',
+        threshold: 'Combines a 12-factor Physiological Score with a 6-factor Operative Severity Score using logistic regression.',
+        keywords: 'portsmouth physiological operative severity score enumeration mortality morbidity general emergency surgery',
+        referenceSections: [
+          {
+            title: '12 Physiological Factors (Preoperative)',
+            items: [
+              'Age (<60, 61–70, ≥71), Cardiac signs / CXR, Respiratory history / CXR, Systolic BP, Pulse rate, Glasgow Coma Scale (GCS), Hemoglobin, White Blood Cell count, Urea, Sodium, Potassium, and ECG findings.'
+            ]
+          },
+          {
+            title: '6 Operative Severity Factors (Intraoperative)',
+            items: [
+              'Operative severity (Minor, Moderate, Major, Major+), Multiple procedures, Total blood loss (≤100, 101–500, 501–999, ≥1000 mL), Peritoneal soiling (None, Minor serous, Local pus, Free bowel content/pus/blood), Presence of malignancy, and Mode of surgery (Elective, Emergency >24h resuscitation, Emergency ≤2h resuscitation).'
+            ]
+          }
+        ]
+      },
+      {
+        id: 'cfs',
+        name: 'Clinical Frailty Scale (CFS)',
+        acronym: 'CFS (1–9)',
+        category: 'preop',
+        type: 'selector',
+        badgeText: 'Interactive Selector',
+        purpose: 'Screens older adults for frailty, which strongly predicts postoperative delirium, institutionalization, and mortality.',
+        threshold: '9-point clinical scale from 1 (Very Fit) to 9 (Terminally Ill); Score ≥ 5 indicates clinical frailty.',
+        keywords: 'clinical frailty scale geriatric elderly delirium rockwood vulnerable fit',
+        options: [
+          { value: 'CFS 1', title: '1 — Very Fit', desc: 'People who are robust, active, energetic and motivated. They commonly exercise regularly and are among the fittest for their age.', risk: 'Non-Frail (Low Frailty Risk)', level: 'low' },
+          { value: 'CFS 2', title: '2 — Well', desc: 'People who have no active disease symptoms but are less fit than category 1. Often exercise or are very active occasionally (e.g., seasonally).', risk: 'Non-Frail (Low Frailty Risk)', level: 'low' },
+          { value: 'CFS 3', title: '3 — Managing Well', desc: 'People whose medical problems are well controlled, but are not regularly active beyond routine walking.', risk: 'Non-Frail (Low Frailty Risk)', level: 'low' },
+          { value: 'CFS 4', title: '4 — Living with Very Mild Frailty (Vulnerable)', desc: 'While not dependent on others for daily help, often symptoms limit activities. A common complaint is being "slowed up" and/or being tired during the day.', risk: 'Pre-Frail / Vulnerable — Implement delirium & mobilization precautions', level: 'moderate' },
+          { value: 'CFS 5', title: '5 — Living with Mild Frailty', desc: 'More evident slowing, and need help in high-order IADLs (finances, transportation, heavy housework, medications).', risk: 'Frail (CFS ≥ 5) — Elevated risk of delirium & prolonged LOS', level: 'high' },
+          { value: 'CFS 6', title: '6 — Living with Moderate Frailty', desc: 'Need help with all outside activities and with keeping house. Inside, often have problems with stairs and need help with bathing and might need minimal assistance with dressing.', risk: 'Moderately Frail (CFS ≥ 5) — High perioperative morbidity & discharge care needs', level: 'high' },
+          { value: 'CFS 7', title: '7 — Living with Severe Frailty', desc: 'Completely dependent for personal care, from whatever cause (physical or cognitive). Even so, they seem stable and not at high risk of dying (within ~6 months).', risk: 'Severely Frail — Multidisciplinary geriatric/anesthesia goals-of-care review', level: 'high' },
+          { value: 'CFS 8', title: '8 — Living with Very Severe Frailty', desc: 'Completely dependent, approaching the end of life. Typically, they could not recover even from a minor illness.', risk: 'Very Severely Frail — High mortality; consider conservative alternatives', level: 'high' },
+          { value: 'CFS 9', title: '9 — Terminally Ill', desc: 'Approaching the end of life. Applies to people with a life expectancy < 6 months who are not otherwise evidently frail.', risk: 'Terminally Ill — Palliative / comfort-focused surgical evaluation', level: 'high' }
+        ]
+      },
+
+      // --- CATEGORY 2: AIRWAY & RESPIRATORY RISK ASSESSMENT (5 Tools) ---
+      {
+        id: 'mallampati',
+        name: 'Modified Mallampati Classification',
+        acronym: 'Mallampati (I–IV)',
+        category: 'airway',
+        type: 'selector',
+        badgeText: 'Interactive Selector',
+        purpose: 'Evaluates oropharyngeal visibility (uvula, faucial pillars, soft palate) to screen for difficult direct laryngoscopy.',
+        threshold: 'Classes III and IV suggest a higher likelihood of difficult direct laryngoscopy and difficult mask ventilation.',
+        keywords: 'modified mallampati classification airway uvula faucial pillars soft palate hard palate laryngoscopy',
+        options: [
+          { value: 'Class I', title: 'Class I', desc: 'Full visibility of soft palate, uvula, fauces, and anterior/posterior tonsillar pillars.', risk: 'Low predicted difficulty for direct laryngoscopy', level: 'low' },
+          { value: 'Class II', title: 'Class II', desc: 'Visibility of soft palate, major part of uvula, and fauces (pillars obscured by tongue base).', risk: 'Low-to-Moderate predicted difficulty', level: 'low' },
+          { value: 'Class III', title: 'Class III', desc: 'Visibility of soft palate and base of uvula only.', risk: 'Elevated Risk (Class ≥ III) — Have video laryngoscope & airway adjuncts ready', level: 'high' },
+          { value: 'Class IV', title: 'Class IV', desc: 'Soft palate is not visible at all; only hard palate is visible.', risk: 'High Risk (Class IV) — Prepare difficult airway cart / video laryngoscopy', level: 'high' }
+        ]
+      },
+      {
+        id: 'lemon',
+        name: 'LEMON Airway Assessment',
+        acronym: 'LEMON (0–10)',
+        category: 'airway',
+        type: 'checklist',
+        badgeText: 'Interactive Checklist',
+        purpose: 'Structured bedside screen for difficult intubation combining external anatomy, 3-3-2 rule, Mallampati, obstruction, and neck mobility.',
+        threshold: 'Higher scores (especially ≥ 3–4) correlate strongly with poor laryngoscopic views (Cormack-Lehane III/IV).',
+        keywords: 'lemon airway assessment look externally 3-3-2 rule mallampati obstruction obesity neck mobility difficult intubation',
+        items: [
+          { id: 'l1', label: 'Look Externally: Facial trauma or anatomical distortion', points: 1 },
+          { id: 'l2', label: 'Look Externally: Large incisors (buck teeth)', points: 1 },
+          { id: 'l3', label: 'Look Externally: Beard or moustache (masks anatomy / difficult seal)', points: 1 },
+          { id: 'l4', label: 'Look Externally: Large tongue', points: 1 },
+          { id: 'e1', label: 'Evaluate 3-3-2: Inter-incisor distance < 3 patient fingers', points: 1 },
+          { id: 'e2', label: 'Evaluate 3-3-2: Hyoid–mental distance < 3 patient fingers', points: 1 },
+          { id: 'e3', label: 'Evaluate 3-3-2: Thyroid-to-floor-of-mouth distance < 2 fingers', points: 1 },
+          { id: 'm1', label: 'Mallampati Score ≥ Class III', points: 1 },
+          { id: 'o1', label: 'Obstruction / Obesity (epiglottitis, peritonsillar abscess, trauma, BMI > 30)', points: 1 },
+          { id: 'n1', label: 'Neck Mobility limited (cervical spine collar, arthritis, ankylosing spondylitis)', points: 1 }
+        ],
+        interpret: (score) => {
+          if (score === 0) return { label: '0 / 10 — No LEMON Red Flags', detail: 'Standard airway setup; continue routine pre-oxygenation and airway plan.', level: 'low' };
+          if (score <= 2) return { label: `${score} / 10 — Low-to-Moderate Airway Complexity`, detail: 'Ensure optimal sniffing/ramped positioning and immediate availability of bougie/stylet.', level: 'moderate' };
+          return { label: `${score} / 10 — High Suspicion for Difficult Laryngoscopy`, detail: 'Consider primary video laryngoscopy or awake intubation strategy; ensure difficult airway cart at bedside.', level: 'high' };
+        }
+      },
+      {
+        id: 'cormack',
+        name: 'Cormack-Lehane Laryngoscopic Grading',
+        acronym: 'Cormack-Lehane (1–4)',
+        category: 'airway',
+        type: 'selector',
+        badgeText: 'Interactive Selector',
+        purpose: 'Recorded during direct laryngoscopy to document the best glottic view obtained, guiding intubation technique and future airway records.',
+        threshold: 'Grade 1 = full vocal cords; Grade 3 = epiglottis only; Grade 4 = neither glottis nor epiglottis visible.',
+        keywords: 'cormack lehane grading glottic view vocal cords epiglottis direct laryngoscopy grade 1 2 3 4',
+        options: [
+          { value: 'Grade 1', title: 'Grade 1 — Full View of Glottis', desc: 'Entire vocal cords and glottic aperture are clearly visible.', risk: 'Uncomplicated direct intubation', level: 'low' },
+          { value: 'Grade 2a', title: 'Grade 2a — Partial View of Glottis', desc: 'Partial view of the vocal cords is visible.', risk: 'Typically straightforward; stylet may assist', level: 'low' },
+          { value: 'Grade 2b', title: 'Grade 2b — Arytenoids / Posterior Cords Only', desc: 'Only the arytenoids or very posterior extremity of the vocal cords are seen.', risk: 'Moderately difficult — Gum elastic bougie recommended', level: 'moderate' },
+          { value: 'Grade 3', title: 'Grade 3 — Epiglottis Only', desc: 'Only the epiglottis is visible; none of the glottis is seen (3a: liftable epiglottis; 3b: adherent epiglottis).', risk: 'Difficult Direct Laryngoscopy — Use bougie or switch to Video Laryngoscopy', level: 'high' },
+          { value: 'Grade 4', title: 'Grade 4 — No Glottic Structures Visible', desc: 'Neither the glottis nor the epiglottis is visible (only soft palate/tongue base).', risk: 'Failed Direct View — Transition immediately to Video Laryngoscopy / SGA / Fiberoptic rescue', level: 'high' }
+        ]
+      },
+      {
+        id: 'stopbang',
+        name: 'STOP-BANG Questionnaire',
+        acronym: 'STOP-BANG (0–8)',
+        category: 'airway',
+        type: 'checklist',
+        badgeText: 'Interactive Calculator',
+        purpose: 'Screens surgical patients for obstructive sleep apnea (OSA) and perioperative respiratory depression risk.',
+        threshold: '0–2 Low Risk; 3–4 Intermediate Risk; ≥ 5 (or ≥ 2 STOP items + male/BMI>35/neck>40cm) High Risk for severe OSA.',
+        keywords: 'stop bang osa obstructive sleep apnea snoring tiredness observed apnea pressure bmi age neck gender',
+        items: [
+          { id: 's', label: 'S — Snoring: Do you snore loudly (louder than talking or heard through closed doors)?', points: 1 },
+          { id: 't', label: 'T — Tired: Do you often feel tired, fatigued, or sleepy during daytime?', points: 1 },
+          { id: 'o', label: 'O — Observed: Has anyone observed you stop breathing or choking/gasping during sleep?', points: 1 },
+          { id: 'p', label: 'P — Pressure: Do you have or are you being treated for high blood pressure?', points: 1 },
+          { id: 'b', label: 'B — BMI: Body Mass Index > 35 kg/m²', points: 1 },
+          { id: 'a', label: 'A — Age: Age > 50 years old', points: 1 },
+          { id: 'n', label: 'N — Neck: Neck circumference > 40 cm (16 inches)', points: 1 },
+          { id: 'g', label: 'G — Gender: Male sex', points: 1 }
+        ],
+        interpret: (score, checkedIds) => {
+          const stopCount = ['s', 't', 'o', 'p'].filter(id => checkedIds.includes(id)).length;
+          const highRiskCombo = stopCount >= 2 && (checkedIds.includes('g') || checkedIds.includes('b') || checkedIds.includes('n'));
+          if (score >= 5 || highRiskCombo) {
+            return {
+              label: `${score} / 8 — High Risk for Moderate-to-Severe OSA`,
+              detail: 'Use opioid-sparing multimodal analgesia, continuous pulse oximetry/capnography in PACU, non-supine positioning, and CPAP if prescribed.',
+              level: 'high'
+            };
+          }
+          if (score >= 3) {
+            return {
+              label: `${score} / 8 — Intermediate Risk for OSA`,
+              detail: 'Monitor closely for postoperative respiratory depression; minimize long-acting opioids and sedatives.',
+              level: 'moderate'
+            };
+          }
+          return {
+            label: `${score} / 8 — Low Risk for OSA`,
+            detail: 'Standard perioperative respiratory monitoring.',
+            level: 'low'
+          };
+        }
+      },
+      {
+        id: 'ariscat',
+        name: 'ARISCAT Score (Postoperative Pulmonary Complications)',
+        acronym: 'ARISCAT',
+        category: 'airway',
+        type: 'multigroup',
+        badgeText: 'Interactive Calculator',
+        purpose: 'Predicts risk of in-hospital postoperative pulmonary complications (PPCs: respiratory failure, infection, pleural effusion, atelectasis, bronchospasm).',
+        threshold: '< 26 points: Low Risk (1.6% PPC); 26–44 points: Intermediate Risk (13.3% PPC); ≥ 45 points: High Risk (42.1% PPC).',
+        keywords: 'ariscat postoperative pulmonary complications ppc spo2 anemia incision duration emergency respiratory infection',
+        groups: [
+          {
+            id: 'age',
+            label: '1. Age (years)',
+            options: [
+              { label: '≤ 50 years', points: 0 },
+              { label: '51–80 years', points: 3 },
+              { label: '> 80 years', points: 16 }
+            ]
+          },
+          {
+            id: 'spo2',
+            label: '2. Preoperative SpO₂ (room air)',
+            options: [
+              { label: '≥ 96%', points: 0 },
+              { label: '91–95%', points: 8 },
+              { label: '≤ 90%', points: 24 }
+            ]
+          },
+          {
+            id: 'infection',
+            label: '3. Respiratory infection in the last month',
+            options: [
+              { label: 'No', points: 0 },
+              { label: 'Yes', points: 17 }
+            ]
+          },
+          {
+            id: 'anemia',
+            label: '4. Preoperative anemia (Hb ≤ 10 g/dL)',
+            options: [
+              { label: 'No (Hb > 10 g/dL)', points: 0 },
+              { label: 'Yes (Hb ≤ 10 g/dL)', points: 11 }
+            ]
+          },
+          {
+            id: 'incision',
+            label: '5. Surgical incision site',
+            options: [
+              { label: 'Peripheral', points: 0 },
+              { label: 'Upper abdominal', points: 15 },
+              { label: 'Intrathoracic', points: 24 }
+            ]
+          },
+          {
+            id: 'duration',
+            label: '6. Duration of surgery',
+            options: [
+              { label: '< 2 hours', points: 0 },
+              { label: '2–3 hours', points: 16 },
+              { label: '> 3 hours', points: 23 }
+            ]
+          },
+          {
+            id: 'emergency',
+            label: '7. Emergency procedure',
+            options: [
+              { label: 'No (Elective)', points: 0 },
+              { label: 'Yes (Emergency)', points: 8 }
+            ]
+          }
+        ],
+        interpret: (score) => {
+          if (score < 26) return { label: `${score} pts — Low Risk (1.6% PPC Rate)`, detail: 'Routine lung-protective ventilation (6–8 mL/kg PBW + PEEP) and early mobilization.', level: 'low' };
+          if (score <= 44) return { label: `${score} pts — Intermediate Risk (13.3% PPC Rate)`, detail: 'Consider regional/epidural analgesia, lung-protective ventilation, and postoperative incentive spirometry/CPAP.', level: 'moderate' };
+          return { label: `${score} pts — High Risk (42.1% PPC Rate)`, detail: 'High likelihood of postoperative pulmonary complications. Prioritize neuraxial/regional blocks, complete NMB reversal (TOF ≥ 0.90), and HDU/ICU respiratory support.', level: 'high' };
+        }
+      },
+
+      // --- CATEGORY 3: ORGAN-SPECIFIC & COMPLICATION RISK SCORES (6 Tools) ---
+      {
+        id: 'rcri',
+        name: "Revised Cardiac Risk Index (Lee's Index)",
+        acronym: 'RCRI (0–6)',
+        category: 'organ',
+        type: 'checklist',
+        badgeText: 'Interactive Calculator',
+        purpose: 'Estimates risk of major adverse cardiac events (MACE: MI, pulmonary edema, VF/primary cardiac arrest, complete heart block) after non-cardiac surgery.',
+        threshold: '0 pts: 0.4% (3.9% contemporary MACE); 1 pt: 0.9% (6.0%); 2 pts: 6.6% (10.1%); ≥ 3 pts: 11% (15%). ≥ 2 factors warrants closer cardiac evaluation.',
+        keywords: 'revised cardiac risk index lee index mace myocardial infarction heart failure cerebrovascular insulin creatinine',
+        items: [
+          { id: 'r1', label: 'High-Risk Surgery (intraperitoneal, intrathoracic, or suprainguinal vascular)', points: 1 },
+          { id: 'r2', label: 'History of Ischemic Heart Disease (MI, positive exercise test, angina, nitrate use, or pathologic Q waves)', points: 1 },
+          { id: 'r3', label: 'History of Congestive Heart Failure (CHF, pulmonary edema, PND, bilateral rales/S3, or CXR redistribution)', points: 1 },
+          { id: 'r4', label: 'History of Cerebrovascular Disease (prior stroke or transient ischemic attack [TIA])', points: 1 },
+          { id: 'r5', label: 'Preoperative treatment with Insulin for diabetes mellitus', points: 1 },
+          { id: 'r6', label: 'Preoperative Serum Creatinine > 2.0 mg/dL (> 177 µmol/L)', points: 1 }
+        ],
+        interpret: (score) => {
+          const rates = [
+            { orig: '0.4%', mod: '3.9%', level: 'low', advice: 'Low cardiac risk. Proceed to surgery without further noninvasive cardiac testing.' },
+            { orig: '0.9%', mod: '6.0%', level: 'low', advice: 'Low-to-moderate risk. Assess functional capacity (METs); proceed if ≥ 4 METs.' },
+            { orig: '6.6%', mod: '10.1%', level: 'high', advice: 'Elevated cardiac risk (≥ 2 predictors). Assess METs; consider BNP/troponin surveillance and pharmacologic stress testing if functional capacity < 4 METs and results would alter management.' },
+            { orig: '11.0%', mod: '15.0%', level: 'high', advice: 'High MACE risk (≥ 3 predictors). Multidisciplinary cardiology/anesthesia optimization, postoperative troponin monitoring, and invasive arterial line consideration.' }
+          ];
+          const idx = Math.min(score, 3);
+          return {
+            label: `${score} / 6 — Classic Risk: ${rates[idx].orig} | Contemporary MACE: ${rates[idx].mod}`,
+            detail: rates[idx].advice,
+            level: rates[idx].level
+          };
+        }
+      },
+      {
+        id: 'euroscore',
+        name: 'EuroSCORE II & STS Risk Score',
+        acronym: 'EuroSCORE II / STS',
+        category: 'organ',
+        type: 'reference',
+        badgeText: 'Cardiac Surgery Reference',
+        purpose: 'Multivariable risk models predicting in-hospital and 30-day mortality (and major morbidity for STS) following adult cardiac surgery.',
+        threshold: 'Used in Heart Team discussions to stratify CABG, valve surgery, and TAVR vs. surgical valve replacement.',
+        keywords: 'euroscore ii sts society thoracic surgeons cardiac surgery cabg valve mortality',
+        referenceSections: [
+          {
+            title: 'EuroSCORE II Core Domains (18 Variables)',
+            items: [
+              'Patient-Related: Age, Sex, Renal impairment (CrCl >85, 50–85, <50 mL/min, or dialysis), Extracardiac arteriopathy, Poor mobility, Previous cardiac surgery, Chronic lung disease, Active endocarditis, Critical preoperative state, Diabetes on insulin.',
+              'Cardiac-Related: NYHA Class (I–IV), CCS Class 4 angina, LV function (Good >50%, Moderate 31–50%, Poor 21–30%, Very poor ≤20%), Recent MI (<90 days), Pulmonary hypertension (Systolic PA pressure 31–55 or >55 mmHg).',
+              'Operation-Related: Urgency (Elective, Urgent, Emergency, Salvage), Weight of the intervention (Isolated CABG, Single non-CABG, 2 procedures, ≥3 procedures), Surgery on thoracic aorta.'
+            ]
+          },
+          {
+            title: 'STS Adult Cardiac Surgery Risk Calculator',
+            items: [
+              'Predicts 30-day operative mortality plus 8 major complications: Stroke, Renal Failure, Prolonged Ventilation (>24h), Deep Sternal Wound Infection, Reoperation, Morbidity/Mortality composite, Short LOS (<6d), and Long LOS (>14d).'
+            ]
+          }
+        ]
+      },
+      {
+        id: 'apfel',
+        name: 'Apfel Simplified Risk Score (Adult PONV)',
+        acronym: 'Apfel Score (0–4)',
+        category: 'organ',
+        type: 'checklist',
+        badgeText: 'Interactive Calculator',
+        purpose: 'Predicts postoperative nausea and vomiting (PONV) in adults to guide multimodal antiemetic prophylaxis.',
+        threshold: '0 factors: ~10%; 1 factor: ~21%; 2 factors: ~39%; 3 factors: ~61%; 4 factors: ~79% PONV incidence.',
+        keywords: 'apfel score ponv postoperative nausea vomiting female non smoker motion sickness opioids antiemetic',
+        items: [
+          { id: 'a1', label: 'Female sex', points: 1 },
+          { id: 'a2', label: 'Non-smoker', points: 1 },
+          { id: 'a3', label: 'History of PONV or motion sickness', points: 1 },
+          { id: 'a4', label: 'Postoperative opioids anticipated', points: 1 }
+        ],
+        interpret: (score) => {
+          const data = [
+            { pct: '10%', level: 'low', plan: 'Low Risk: Routine prophylaxis generally unnecessary unless vomiting poses surgical risk (e.g., wired jaw, neurosurgery).' },
+            { pct: '21%', level: 'low', plan: 'Low-to-Moderate Risk: Consider 1–2 antiemetic agents (e.g., dexamethasone 4 mg IV at induction or ondansetron 4 mg IV at end).' },
+            { pct: '39%', level: 'moderate', plan: 'Moderate Risk: Administer 2 antiemetics from different classes (e.g., Dexamethasone + 5-HT3 antagonist) and minimize volatile/opioid load.' },
+            { pct: '61%', level: 'high', plan: 'High Risk: Multimodal prophylaxis with 3–4 interventions (e.g., TIVA with propofol + Dexamethasone + Ondansetron + NK1 antagonist/droperidol).' },
+            { pct: '79%', level: 'high', plan: 'Very High Risk: Aggressive multimodal regimen (Propofol TIVA, avoid N₂O/volatiles, opioid-free/sparing regional analgesia, ≥3 antiemetics).' }
+          ];
+          return {
+            label: `${score} / 4 Factors — Estimated PONV Risk: ~${data[score].pct}`,
+            detail: data[score].plan,
+            level: data[score].level
+          };
+        }
+      },
+      {
+        id: 'eberhart',
+        name: 'Eberhart (POVOC) Score (Pediatric PONV)',
+        acronym: 'Eberhart / POVOC (0–4)',
+        category: 'organ',
+        type: 'checklist',
+        badgeText: 'Interactive Calculator',
+        purpose: 'Predicts postoperative vomiting (POV) in children undergoing general anesthesia.',
+        threshold: '0 factors: 9%; 1 factor: 10%; 2 factors: 30%; 3 factors: 55%; 4 factors: 70% risk of POV.',
+        keywords: 'eberhart povoc pediatric postoperative vomiting children strabismus duration age',
+        items: [
+          { id: 'e1', label: 'Duration of surgery ≥ 30 minutes', points: 1 },
+          { id: 'e2', label: 'Age ≥ 3 years', points: 1 },
+          { id: 'e3', label: 'Strabismus surgery', points: 1 },
+          { id: 'e4', label: 'History of POV in child or PONV in parents/siblings', points: 1 }
+        ],
+        interpret: (score) => {
+          const risks = ['9%', '10%', '30%', '55%', '70%'];
+          const levels = ['low', 'low', 'moderate', 'high', 'high'];
+          const plans = [
+            'Low Risk: Prophylaxis optional.',
+            'Low Risk: Single antiemetic (e.g., dexamethasone 0.15 mg/kg or ondansetron 0.1 mg/kg) if high-risk procedure.',
+            'Moderate Risk: Dual prophylaxis recommended (Dexamethasone + Ondansetron).',
+            'High Risk: Dual/triple prophylaxis + consider propofol TIVA and opioid-sparing regional block.',
+            'Very High Risk: Propofol TIVA + Dexamethasone + Ondansetron + multimodal regional analgesia.'
+          ];
+          return {
+            label: `${score} / 4 Factors — Pediatric POV Risk: ${risks[score]}`,
+            detail: plans[score],
+            level: levels[score]
+          };
+        }
+      },
+      {
+        id: 'childpugh',
+        name: 'Child-Pugh & MELD-Na Liver Risk Scores',
+        acronym: 'Child-Pugh / MELD-Na',
+        category: 'organ',
+        type: 'multigroup',
+        badgeText: 'Interactive Calculator',
+        purpose: 'Quantifies hepatic synthetic and excretory reserve to estimate perioperative morbidity and mortality in cirrhosis.',
+        threshold: 'Child-Pugh Class A (5–6): ~10% mortality; Class B (7–9): ~30% mortality; Class C (10–15) or MELD > 15: prohibitive risk (~75–80%) for elective major surgery.',
+        keywords: 'child pugh meld na liver cirrhosis bilirubin albumin inr ascites encephalopathy hepatic',
+        groups: [
+          {
+            id: 'bili',
+            label: '1. Total Bilirubin',
+            options: [
+              { label: '< 2.0 mg/dL (< 34 µmol/L)', points: 1 },
+              { label: '2.0–3.0 mg/dL (34–50 µmol/L)', points: 2 },
+              { label: '> 3.0 mg/dL (> 50 µmol/L)', points: 3 }
+            ]
+          },
+          {
+            id: 'alb',
+            label: '2. Serum Albumin',
+            options: [
+              { label: '> 3.5 g/dL (> 35 g/L)', points: 1 },
+              { label: '2.8–3.5 g/dL (28–35 g/L)', points: 2 },
+              { label: '< 2.8 g/dL (< 28 g/L)', points: 3 }
+            ]
+          },
+          {
+            id: 'inr',
+            label: '3. INR (or Prothrombin Time prolongation)',
+            options: [
+              { label: 'INR < 1.7 (PT < 4s prolonged)', points: 1 },
+              { label: 'INR 1.7–2.3 (PT 4–6s prolonged)', points: 2 },
+              { label: 'INR > 2.3 (PT > 6s prolonged)', points: 3 }
+            ]
+          },
+          {
+            id: 'ascites',
+            label: '4. Ascites',
+            options: [
+              { label: 'None', points: 1 },
+              { label: 'Mild / Slight (diuretic-responsive)', points: 2 },
+              { label: 'Moderate-to-Severe (diuretic-refractory)', points: 3 }
+            ]
+          },
+          {
+            id: 'enceph',
+            label: '5. Hepatic Encephalopathy',
+            options: [
+              { label: 'None', points: 1 },
+              { label: 'Grade I–II (Mild / controlled with lactulose)', points: 2 },
+              { label: 'Grade III–IV (Severe / refractory)', points: 3 }
+            ]
+          }
+        ],
+        footerNote: 'MELD-Na Reference: Uses Serum Bilirubin, INR, Creatinine, Sodium, and Dialysis status (range 6–40). MELD < 10: elective surgery generally acceptable; MELD 10–15: caution/optimization; MELD > 15: contraindicated for elective non-transplant surgery.',
+        interpret: (score) => {
+          if (score <= 6) return { label: `${score} pts — Child-Pugh Class A (Well-Compensated)`, detail: 'Estimated abdominal surgery mortality ~10%. Elective surgery generally permissible with standard hepatic precautions (maintain hepatic blood flow, avoid hepatotoxins).', level: 'low' };
+          if (score <= 9) return { label: `${score} pts — Child-Pugh Class B (Significant Compromise)`, detail: 'Estimated major surgery mortality ~30%. Preoperative medical optimization required (correct coagulopathy, control ascites, nutritional support).', level: 'moderate' };
+          return { label: `${score} pts — Child-Pugh Class C (Decompensated Cirrhosis)`, detail: 'Estimated major surgery mortality ~75–82%. Elective surgery is contraindicated; consider non-surgical alternatives or transplant evaluation.', level: 'high' };
+        }
+      },
+      {
+        id: 'caprini',
+        name: 'Caprini VTE Risk Score',
+        acronym: 'Caprini VTE',
+        category: 'organ',
+        type: 'checklist',
+        badgeText: 'Interactive Calculator',
+        purpose: 'Stratifies surgical patients for venous thromboembolism (DVT/PE) risk to guide mechanical and pharmacologic prophylaxis.',
+        threshold: '0 pts: Very Low; 1–2 pts: Low; 3–4 pts: Moderate; ≥ 5 pts: High VTE Risk (pharmacologic + mechanical prophylaxis).',
+        keywords: 'caprini vte venous thromboembolism dvt pe deep vein thrombosis prophylaxis anticoagulation',
+        items: [
+          { id: 'c1', label: 'Age 41–60 years (+1 pt)', points: 1 },
+          { id: 'c2', label: 'Minor surgery planned (+1 pt)', points: 1 },
+          { id: 'c3', label: 'BMI > 25 kg/m² (+1 pt)', points: 1 },
+          { id: 'c4', label: 'Swollen legs or varicose veins (+1 pt)', points: 1 },
+          { id: 'c5', label: 'Sepsis, serious lung disease/pneumonia, or CHF (< 1 month) (+1 pt)', points: 1 },
+          { id: 'c6', label: 'Oral contraceptives, HRT, or pregnancy/postpartum (+1 pt)', points: 1 },
+          { id: 'c7', label: 'Age 61–74 years (+2 pts)', points: 2 },
+          { id: 'c8', label: 'Major open or laparoscopic surgery > 45 minutes (+2 pts)', points: 2 },
+          { id: 'c9', label: 'Active malignancy (present or previous) (+2 pts)', points: 2 },
+          { id: 'c10', label: 'Confined to bed > 72 hours or immobilizing plaster cast (+2 pts)', points: 2 },
+          { id: 'c11', label: 'Central venous access (+2 pts)', points: 2 },
+          { id: 'c12', label: 'Age ≥ 75 years (+3 pts)', points: 3 },
+          { id: 'c13', label: 'History of DVT/PE or family history of thrombosis / thrombophilia (+3 pts)', points: 3 },
+          { id: 'c14', label: 'Elective major lower extremity arthroplasty, hip/pelvis/leg fracture, stroke, or acute spinal cord injury (< 1 mo) (+5 pts)', points: 5 }
+        ],
+        interpret: (score) => {
+          if (score === 0) return { label: `${score} pts — Very Low VTE Risk (< 0.5%)`, detail: 'Early frequent ambulation; no specific pharmacologic or mechanical prophylaxis required.', level: 'low' };
+          if (score <= 2) return { label: `${score} pts — Low VTE Risk (~1.5%)`, detail: 'Mechanical prophylaxis (intermittent pneumatic compression [IPC]).', level: 'low' };
+          if (score <= 4) return { label: `${score} pts — Moderate VTE Risk (~3.0%)`, detail: 'Pharmacologic prophylaxis (LMWH or UFH) OR mechanical prophylaxis (IPC) if high bleeding risk.', level: 'moderate' };
+          return { label: `${score} pts — High VTE Risk (≥ 6.0% — up to 10–20% if ≥ 8)`, detail: 'Combined pharmacologic prophylaxis (LMWH/UFH) PLUS mechanical prophylaxis (IPC); consider extended prophylaxis in cancer/orthopedic surgery.', level: 'high' };
+        }
+      },
+
+      // --- CATEGORY 4: INTRAOPERATIVE & REGIONAL MONITORING SCALES (3 Tools) ---
+      {
+        id: 'tof',
+        name: 'Train-of-Four (TOF) Count & Ratio',
+        acronym: 'TOF (0–4 / ≥0.90)',
+        category: 'intraop',
+        type: 'selector',
+        badgeText: 'Interactive Guide',
+        purpose: 'Quantifies non-depolarizing neuromuscular blockade depth via peripheral nerve stimulation (ulnar nerve / adductor pollicis) to guide dosing and safe extubation.',
+        threshold: 'Quantitative TOF Ratio ≥ 0.90 (measured via acceleromyography or electromyography) is mandatory prior to tracheal extubation.',
+        keywords: 'train of four tof count ratio neuromuscular blockade curarization sugammadex neostigmine extubation adductor pollicis',
+        options: [
+          { value: 'TOF 0 (PTC 0)', title: 'TOF Count 0, Post-Tetanic Count (PTC) 0 — Deep / Intense Block', desc: '100% receptor occupancy. No twitches to TOF or post-tetanic stimulation.', risk: 'Deep Block — Reversal requires high-dose Sugammadex (4–16 mg/kg); neostigmine ineffective', level: 'high' },
+          { value: 'TOF 0 (PTC ≥ 1)', title: 'TOF Count 0, PTC ≥ 1 — Deep Block (Recovering)', desc: '90–95% receptor occupancy. Suitable for surgical relaxation; neostigmine cannot reverse.', risk: 'Deep Block — Sugammadex 4 mg/kg required if immediate reversal needed', level: 'high' },
+          { value: 'TOF 1–2', title: 'TOF Count 1 to 2 — Moderate Surgical Block', desc: '80–90% receptor occupancy. Optimal target for most intra-abdominal/thoracic surgical relaxation.', risk: 'Moderate Block — Sugammadex 2 mg/kg or wait for ≥ 3–4 twitches before neostigmine', level: 'moderate' },
+          { value: 'TOF 3–4 (Fade)', title: 'TOF Count 3 to 4 with Fade (Ratio < 0.90) — Shallow Block', desc: '70–80% receptor occupancy. Visual/tactile fade present; patient remains at risk of upper airway collapse and aspiration.', risk: 'Incomplete Recovery — Reversal required; DO NOT extubate until quantitative TOF ≥ 0.90', level: 'moderate' },
+          { value: 'TOF Ratio ≥ 0.90', title: 'Quantitative TOF Ratio ≥ 0.90 — Adequate Neuromuscular Recovery', desc: 'Pharyngeal muscle coordination and hypoxic ventilatory drive restored.', risk: 'Safe for Tracheal Extubation (assuming airway/respiratory/hemodynamic criteria met)', level: 'low' }
+        ]
+      },
+      {
+        id: 'bis',
+        name: 'Bispectral Index (BIS) / Processed EEG Entropy',
+        acronym: 'BIS (0–100)',
+        category: 'intraop',
+        type: 'selector',
+        badgeText: 'Interactive Range Guide',
+        purpose: 'Processed frontal EEG index (0–100) monitoring hypnotic depth of anesthesia to prevent intraoperative awareness while avoiding excessive burst suppression.',
+        threshold: 'Target 40–60 for general anesthesia; < 40 indicates deep hypnosis / burst suppression; > 60 increases awareness risk.',
+        keywords: 'bispectral index bis entropy eeg hypnotic depth awareness burst suppression general anesthesia',
+        options: [
+          { value: 'BIS 80–100', title: '80–100 — Awake / Light Sedation', desc: 'Patient awake, responds to normal voice or light tactile stimulation.', risk: 'Awake / Minimal Sedation — High awareness risk if paralyzed', level: 'high' },
+          { value: 'BIS 60–80', title: '60–80 — Moderate-to-Deep Sedation', desc: 'Low probability of explicit recall; responds to loud verbal or glabellar tap stimulation.', risk: 'Procedural Sedation Zone — Deepen anesthetic if general anesthesia intended', level: 'moderate' },
+          { value: 'BIS 40–60', title: '40–60 — Optimal General Anesthesia Target', desc: 'Low probability of intraoperative consciousness and explicit recall while avoiding excessive anesthetic depth.', risk: 'Target Maintenance Range for General Anesthesia', level: 'low' },
+          { value: 'BIS 20–40', title: '20–40 — Deep Hypnotic State', desc: 'Excessive anesthetic depth; associated with burst suppression and potential postoperative delirium in elderly/frail patients.', risk: 'Excessive Depth — Consider titrating down hypnotic agent if clinically appropriate', level: 'moderate' },
+          { value: 'BIS < 20', title: '< 20 — Burst Suppression / Isoelectric EEG', desc: 'Profound cortical suppression (0 = flatline EEG). Only targeted intentionally for neuroprotection/status epilepticus.', risk: 'Profound Suppression — Reduce anesthetic depth unless intentional neuroprotection', level: 'high' }
+        ]
+      },
+      {
+        id: 'bromage',
+        name: 'Modified Bromage Scale',
+        acronym: 'Bromage (0–3)',
+        category: 'intraop',
+        type: 'selector',
+        badgeText: 'Interactive Selector',
+        purpose: 'Assesses intensity and regression of lower-extremity motor blockade during and after neuraxial (spinal or epidural) anesthesia.',
+        threshold: 'Grade 0 = no motor block (required prior to ambulation/PACU discharge); Grade 3 = complete motor block.',
+        keywords: 'modified bromage scale spinal epidural neuraxial motor block lower extremity knee foot regression',
+        options: [
+          { value: 'Grade 0', title: 'Grade 0 — No Motor Block (0%)', desc: 'Full flexion of knees and feet; able to raise extended leg.', risk: 'Full Motor Recovery — Meets motor regression criterion for PACU discharge / ambulation', level: 'low' },
+          { value: 'Grade 1', title: 'Grade 1 — Partial Motor Block (33%)', desc: 'Inability to raise extended leg; just able to move knees and feet.', risk: 'Mild-to-Moderate Motor Block — Continue monitoring regression', level: 'moderate' },
+          { value: 'Grade 2', title: 'Grade 2 — Almost Complete Motor Block (66%)', desc: 'Inability to flex knees; able to move feet only.', risk: 'Dense Motor Block — Typical during active epidural/spinal analgesia', level: 'moderate' },
+          { value: 'Grade 3', title: 'Grade 3 — Complete Motor Block (100%)', desc: 'Unable to move legs, knees, or feet at all.', risk: 'Complete Motor Block — Expected immediately post-spinal; evaluate for epidural hematoma if persistent beyond expected duration', level: 'high' }
+        ]
+      },
+
+      // --- CATEGORY 5: PACU & ACUTE PAIN (4 Tools) ---
+      {
+        id: 'aldrete',
+        name: 'Modified Aldrete Score (Phase I PACU Discharge)',
+        acronym: 'Modified Aldrete (0–10)',
+        category: 'pacu',
+        type: 'multigroup',
+        badgeText: 'Interactive Calculator',
+        purpose: 'Determines physiological readiness for discharge from Phase I Post-Anesthesia Care Unit (PACU) to the inpatient surgical ward.',
+        threshold: 'Score ≥ 9 out of 10 (with no 0 score in any single domain) is typically required for Phase I PACU discharge.',
+        keywords: 'modified aldrete score pacu discharge activity respiration circulation consciousness spo2 phase 1',
+        groups: [
+          {
+            id: 'activity',
+            label: '1. Activity (voluntary or on command)',
+            options: [
+              { label: 'Moves all 4 extremities', points: 2 },
+              { label: 'Moves 2 extremities', points: 1 },
+              { label: 'Unable to move extremities', points: 0 }
+            ]
+          },
+          {
+            id: 'resp',
+            label: '2. Respiration',
+            options: [
+              { label: 'Breathes deeply and coughs freely', points: 2 },
+              { label: 'Dyspnea, shallow, or limited breathing', points: 1 },
+              { label: 'Apneic or obstructed', points: 0 }
+            ]
+          },
+          {
+            id: 'circ',
+            label: '3. Circulation (Blood Pressure)',
+            options: [
+              { label: 'BP within ± 20% of pre-anesthetic level', points: 2 },
+              { label: 'BP ± 20–49% of pre-anesthetic level', points: 1 },
+              { label: 'BP ± 50% or more of pre-anesthetic level', points: 0 }
+            ]
+          },
+          {
+            id: 'consc',
+            label: '4. Consciousness',
+            options: [
+              { label: 'Fully awake', points: 2 },
+              { label: 'Arousable on calling', points: 1 },
+              { label: 'Not responding', points: 0 }
+            ]
+          },
+          {
+            id: 'spo2',
+            label: '5. Oxygen Saturation (SpO₂)',
+            options: [
+              { label: 'Maintains SpO₂ > 92% on room air', points: 2 },
+              { label: 'Needs O₂ inhalation to maintain SpO₂ > 90%', points: 1 },
+              { label: 'SpO₂ < 90% even with O₂ supplementation', points: 0 }
+            ]
+          }
+        ],
+        interpret: (score) => {
+          if (score >= 9) return { label: `${score} / 10 — Ready for Phase I PACU Discharge (≥ 9)`, detail: 'Meets standard physiological criteria for transfer to surgical ward (verify pain, PONV, and surgical site hemostasis).', level: 'low' };
+          if (score >= 7) return { label: `${score} / 10 — Continue Phase I PACU Monitoring`, detail: 'Below discharge threshold (< 9). Address residual sedation, oxygenation, or hemodynamic variance.', level: 'moderate' };
+          return { label: `${score} / 10 — Intensive PACU Care Required`, detail: 'Significant physiological instability or residual anesthetic effect; maintain close airway and hemodynamic support.', level: 'high' };
+        }
+      },
+      {
+        id: 'padss',
+        name: 'PADSS (Post-Anesthetic Discharge Scoring System)',
+        acronym: 'PADSS (0–10)',
+        category: 'pacu',
+        type: 'multigroup',
+        badgeText: 'Interactive Calculator',
+        purpose: 'Assesses patient readiness for safe home discharge following ambulatory / day-case surgery.',
+        threshold: 'Score ≥ 9 out of 10 (with stable vital signs and responsible adult escort) permits home discharge.',
+        keywords: 'padss post anesthetic discharge scoring system ambulatory day surgery home discharge bleeding pain ambulation',
+        groups: [
+          {
+            id: 'vitals',
+            label: '1. Vital Signs (BP & Pulse)',
+            options: [
+              { label: 'Within 20% of preoperative baseline', points: 2 },
+              { label: '20–40% of preoperative baseline', points: 1 },
+              { label: '> 40% from preoperative baseline', points: 0 }
+            ]
+          },
+          {
+            id: 'ambulation',
+            label: '2. Ambulation & Mental Status',
+            options: [
+              { label: 'Steady gait, no dizziness (or at preop level)', points: 2 },
+              { label: 'Requires assistance', points: 1 },
+              { label: 'Unable to ambulate / dizzy', points: 0 }
+            ]
+          },
+          {
+            id: 'ponv',
+            label: '3. Nausea & Vomiting',
+            options: [
+              { label: 'Minimal / treated with PO medication', points: 2 },
+              { label: 'Moderate / treated with parenteral therapy', points: 1 },
+              { label: 'Severe / continues despite repeated treatment', points: 0 }
+            ]
+          },
+          {
+            id: 'pain',
+            label: '4. Pain Control',
+            options: [
+              { label: 'Minimal or no pain; acceptable to patient (controlled with PO meds)', points: 2 },
+              { label: 'Moderate pain; partially controlled', points: 1 },
+              { label: 'Severe uncontrolled pain', points: 0 }
+            ]
+          },
+          {
+            id: 'bleeding',
+            label: '5. Surgical Bleeding',
+            options: [
+              { label: 'Minimal (does not require dressing change)', points: 2 },
+              { label: 'Moderate (up to 2 dressing changes required)', points: 1 },
+              { label: 'Severe (≥ 3 dressing changes; surgical review needed)', points: 0 }
+            ]
+          }
+        ],
+        interpret: (score) => {
+          if (score >= 9) return { label: `${score} / 10 — Cleared for Ambulatory Home Discharge (≥ 9)`, detail: 'Ensure written discharge instructions, prescribed analgesics, and confirmed responsible adult escort.', level: 'low' };
+          return { label: `${score} / 10 — Not Yet Ready for Home Discharge (< 9)`, detail: 'Continue Phase II recovery; treat pain/PONV, verify orthostatic stability, or consult surgeon if bleeding persists.', level: 'high' };
+        }
+      },
+      {
+        id: 'rass',
+        name: 'Richmond Agitation-Sedation Scale (RASS)',
+        acronym: 'RASS (+4 to -5)',
+        category: 'pacu',
+        type: 'selector',
+        badgeText: 'Interactive Selector',
+        purpose: '10-point scale used in PACU and ICU to titrate sedation, prevent over-sedation, and screen for emergence or ICU delirium.',
+        threshold: '0 = Alert and calm; +1 to +4 = Agitation/Emergence Delirium; -1 to -3 = Light/Moderate Sedation; -4 to -5 = Deep Sedation/Unarousable.',
+        keywords: 'richmond agitation sedation scale rass delirium combative restless drowsy unarousable pacu icu',
+        options: [
+          { value: '+4', title: '+4 — Combative', desc: 'Overtly combative or violent; immediate danger to staff.', risk: 'Severe Agitation / Emergence Delirium — Immediate safety & airway protection intervention', level: 'high' },
+          { value: '+3', title: '+3 — Very Agitated', desc: 'Pulls on or removes tube(s) or catheter(s) or has aggressive behavior toward staff.', risk: 'High Agitation — Rule out hypoxia, hypercapnia, pain, bladder distension, or emergence delirium', level: 'high' },
+          { value: '+2', title: '+2 — Agitated', desc: 'Frequent non-purposeful movement or patient–ventilator dyssynchrony.', risk: 'Moderate Agitation — Reorient, assess analgesia/ventilator synchrony', level: 'high' },
+          { value: '+1', title: '+1 — Restless', desc: 'Anxious or apprehensive but movements are not aggressive or vigorous.', risk: 'Mild Agitation — Verbal reassurance; evaluate pain/anxiety', level: 'moderate' },
+          { value: '0', title: '0 — Alert and Calm', desc: 'Spontaneously pays attention to caregiver; calm and cooperative.', risk: 'Optimal Target State in PACU & Awake ICU', level: 'low' },
+          { value: '-1', title: '-1 — Drowsy', desc: 'Not fully alert, but has sustained (> 10 seconds) awakening, with eye contact, to voice.', risk: 'Minimal Sedation — Acceptable early in PACU recovery', level: 'low' },
+          { value: '-2', title: '-2 — Light Sedation', desc: 'Briefly (< 10 seconds) awakens with eye contact to voice.', risk: 'Light Sedation — Common target for mechanically ventilated ICU patients', level: 'low' },
+          { value: '-3', title: '-3 — Moderate Sedation', desc: 'Any movement (but no eye contact) to voice.', risk: 'Moderate Sedation — Monitor airway patency closely if unintubated', level: 'moderate' },
+          { value: '-4', title: '-4 — Deep Sedation', desc: 'No response to voice, but any movement to physical stimulation.', risk: 'Deep Sedation — High risk of airway obstruction/hypoventilation if unintubated', level: 'high' },
+          { value: '-5', title: '-5 — Unarousable', desc: 'No response to voice or physical stimulation.', risk: 'Unarousable — Assess for residual anesthetics, opioids, hypercapnia, or neurologic event', level: 'high' }
+        ]
+      },
+      {
+        id: 'pain',
+        name: 'Acute Pain Assessment Scales (FLACC, NRS, VAS, FACES)',
+        acronym: 'FLACC / NRS / VAS / FACES',
+        category: 'pacu',
+        type: 'multigroup',
+        badgeText: 'Interactive FLACC + Guide',
+        purpose: 'Standardizes acute postoperative pain quantification across cooperative adults (NRS/VAS) and pediatric or non-verbal patients (FLACC/Wong-Baker FACES).',
+        threshold: '0: No pain; 1–3: Mild pain; 4–6: Moderate pain (titrate multimodal analgesia); 7–10: Severe pain (urgent analgesic intervention).',
+        keywords: 'pain scale nrs numeric rating vas visual analog wong baker faces flacc pediatric non verbal',
+        groups: [
+          {
+            id: 'face',
+            label: 'FLACC 1. Face',
+            options: [
+              { label: '0 — No particular expression or smile', points: 0 },
+              { label: '1 — Occasional grimace or frown, withdrawn, disinterested', points: 1 },
+              { label: '2 — Frequent to constant quivering chin, clenched jaw', points: 2 }
+            ]
+          },
+          {
+            id: 'legs',
+            label: 'FLACC 2. Legs',
+            options: [
+              { label: '0 — Normal position or relaxed', points: 0 },
+              { label: '1 — Uneasy, restless, tense', points: 1 },
+              { label: '2 — Kicking, or legs drawn up', points: 2 }
+            ]
+          },
+          {
+            id: 'activity',
+            label: 'FLACC 3. Activity',
+            options: [
+              { label: '0 — Lying quietly, normal position, moves easily', points: 0 },
+              { label: '1 — Squirming, shifting back and forth, tense', points: 1 },
+              { label: '2 — Arched, rigid, or jerking', points: 2 }
+            ]
+          },
+          {
+            id: 'cry',
+            label: 'FLACC 4. Cry',
+            options: [
+              { label: '0 — No cry (awake or asleep)', points: 0 },
+              { label: '1 — Moans or whimpers; occasional complaint', points: 1 },
+              { label: '2 — Crying steadily, screams or sobs, frequent complaints', points: 2 }
+            ]
+          },
+          {
+            id: 'consolability',
+            label: 'FLACC 5. Consolability',
+            options: [
+              { label: '0 — Content, relaxed', points: 0 },
+              { label: '1 — Reassured by occasional touching, hugging, or being talked to; distractible', points: 1 },
+              { label: '2 — Difficult to console or comfort', points: 2 }
+            ]
+          }
+        ],
+        footerNote: 'Adult & Verbal Scales: NRS (0–10 verbal rating), VAS (100 mm line from "No Pain" to "Worst Imaginable Pain"), and Wong-Baker FACES (0, 2, 4, 6, 8, 10 illustrated expressions for ages ≥ 3 yrs) share identical 0–10 severity thresholds.',
+        interpret: (score) => {
+          if (score === 0) return { label: `FLACC ${score} / 10 — Relaxed & Comfortable (No Pain)`, detail: 'Continue routine multimodal analgesic regimen and periodic reassessment.', level: 'low' };
+          if (score <= 3) return { label: `FLACC ${score} / 10 — Mild Discomfort / Pain`, detail: 'Non-pharmacologic comfort measures + scheduled non-opioid analgesics (acetaminophen/NSAIDs).', level: 'low' };
+          if (score <= 6) return { label: `FLACC ${score} / 10 — Moderate Pain`, detail: 'Administer multimodal analgesia + titrated rescue analgesic; reassess within 15–30 minutes.', level: 'moderate' };
+          return { label: `FLACC ${score} / 10 — Severe Pain / Distress`, detail: 'Urgent IV rescue analgesia / regional block rescue; rule out surgical complication (compartment syndrome, urinary retention, ischemia).', level: 'high' };
+        }
+      }
+    ];
+
+    // =========================================================================
+    // 2. APPLICATION STATE & DOM REFERENCES
+    // =========================================================================
+    let activeCategory = 'all';
+    let searchQuery = '';
+    let activeTool = null;
+    let modalState = {}; // Holds interactive inputs for the open modal
+
+    const categoryStyles = {
+      preop: {
+        badge: 'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800/80',
+        dot: 'bg-sky-500',
+        borderHover: 'hover:border-sky-300 dark:hover:border-sky-700'
+      },
+      airway: {
+        badge: 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-800/80',
+        dot: 'bg-teal-500',
+        borderHover: 'hover:border-teal-300 dark:hover:border-teal-700'
+      },
+      organ: {
+        badge: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800/80',
+        dot: 'bg-indigo-500',
+        borderHover: 'hover:border-indigo-300 dark:hover:border-indigo-700'
+      },
+      intraop: {
+        badge: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/80',
+        dot: 'bg-amber-500',
+        borderHover: 'hover:border-amber-300 dark:hover:border-amber-700'
+      },
+      pacu: {
+        badge: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/80',
+        dot: 'bg-rose-500',
+        borderHover: 'hover:border-rose-300 dark:hover:border-rose-700'
+      }
+    };
+
+    // =========================================================================
+    // 3. INITIALIZATION & THEME HANDLING
+    // =========================================================================
+    document.addEventListener('DOMContentLoaded', () => {
+      // Respect saved or OS theme
+      const savedTheme = localStorage.getItem('anaesthscore-theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+      }
+
+      renderCategoryTabs();
+      renderToolsGrid();
+
+      // Search input listeners
+      const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('input', (e) => {
+        searchQuery = e.target.value.trim();
+        document.getElementById('clearSearchBtn').classList.toggle('hidden', searchQuery.length === 0);
+        renderCategoryTabs();
+        renderToolsGrid();
+      });
+
+      // Keyboard Escape to close modal
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !document.getElementById('toolModal').classList.contains('hidden')) {
+          closeModal();
+        }
+      });
+    });
+
+    function toggleDarkMode() {
+      const htmlEl = document.documentElement;
+      htmlEl.classList.toggle('dark');
+      localStorage.setItem('anaesthscore-theme', htmlEl.classList.contains('dark') ? 'dark' : 'light');
+    }
+
+    function clearSearch() {
+      const searchInput = document.getElementById('searchInput');
+      searchInput.value = '';
+      searchQuery = '';
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+      renderCategoryTabs();
+      renderToolsGrid();
+      searchInput.focus();
+    }
+
+    function resetAllFilters() {
+      activeCategory = 'all';
+      clearSearch();
+    }
+
+    // =========================================================================
+    // 4. FILTERING & RENDERING GRID + TABS
+    // =========================================================================
+    function matchesSearch(tool, q) {
+      if (!q) return true;
+      const term = q.toLowerCase();
+      const catObj = CATEGORIES.find(c => c.id === tool.category);
+      const haystack = [
+        tool.name,
+        tool.acronym,
+        tool.purpose,
+        tool.threshold,
+        tool.keywords,
+        catObj ? catObj.label : ''
+      ].join(' ').toLowerCase();
+      return haystack.includes(term);
+    }
+
+    function renderCategoryTabs() {
+      const container = document.getElementById('categoryTabs');
+      container.innerHTML = CATEGORIES.map(cat => {
+        const count = TOOLS.filter(t => (cat.id === 'all' || t.category === cat.id) && matchesSearch(t, searchQuery)).length;
+        const isActive = activeCategory === cat.id;
+        const activeClasses = isActive
+          ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
+          : 'bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200/70 dark:hover:bg-slate-700';
+
+        return `
+          <button
+            onclick="selectCategory('${cat.id}')"
+            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border whitespace-nowrap transition cursor-pointer ${activeClasses}"
+          >
+            <span class="hidden lg:inline">${cat.label}</span>
+            <span class="lg:hidden">${cat.shortLabel}</span>
+            <span class="px-1.5 py-0.2 rounded-full text-[11px] font-mono ${isActive ? 'bg-white/20 text-white' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400'}">
+              ${count}
+            </span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function selectCategory(catId) {
+      activeCategory = catId;
+      renderCategoryTabs();
+      renderToolsGrid();
+    }
+
+    function renderToolsGrid() {
+      const grid = document.getElementById('toolsGrid');
+      const emptyState = document.getElementById('emptyState');
+      const resultsCount = document.getElementById('resultsCount');
+      const activeFilterText = document.getElementById('activeFilterText');
+
+      const filtered = TOOLS.filter(tool => {
+        const catMatch = activeCategory === 'all' || tool.category === activeCategory;
+        return catMatch && matchesSearch(tool, searchQuery);
+      });
+
+      const currentCatObj = CATEGORIES.find(c => c.id === activeCategory);
+      resultsCount.textContent = `Showing ${filtered.length} of ${TOOLS.length} tools`;
+      activeFilterText.textContent = `• ${currentCatObj ? currentCatObj.label : 'All Categories'}${searchQuery ? ` matching "${searchQuery}"` : ''}`;
+
+      if (filtered.length === 0) {
+        grid.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+        return;
+      }
+
+      grid.classList.remove('hidden');
+      emptyState.classList.add('hidden');
+
+      grid.innerHTML = filtered.map(tool => {
+        const catObj = CATEGORIES.find(c => c.id === tool.category);
+        const style = categoryStyles[tool.category];
+        const isInteractive = tool.type !== 'reference';
+
+        return `
+          <article
+            onclick="openToolModal('${tool.id}')"
+            class="group bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 ${style.borderHover} p-5 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between cursor-pointer"
+          >
+            <div>
+              <!-- Top Row: Category Badge & Interactive Pill -->
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold border ${style.badge}">
+                  <span class="w-1.5 h-1.5 rounded-full ${style.dot}"></span>
+                  ${catObj.shortLabel}
+                </span>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium ${
+                  isInteractive
+                    ? 'bg-teal-50 text-teal-700 dark:bg-teal-950/70 dark:text-teal-300 border border-teal-200/70 dark:border-teal-800/70'
+                    : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700'
+                }">
+                  ${isInteractive ? '⚡ ' : '📋 '}${tool.badgeText}
+                </span>
+              </div>
+
+              <!-- Title & Acronym -->
+              <h3 class="text-base font-bold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors leading-snug">
+                ${tool.name}
+              </h3>
+              <p class="font-mono text-xs text-slate-500 dark:text-slate-400 mt-0.5 mb-3">${tool.acronym}</p>
+
+              <!-- Primary Purpose -->
+              <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                ${tool.purpose}
+              </p>
+            </div>
+
+            <!-- Key Criteria / Cutoff Box + Action Button -->
+            <div class="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+              <div class="bg-slate-50 dark:bg-slate-800/60 rounded-xl p-3 border border-slate-200/60 dark:border-slate-700/60">
+                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">Key Cutoffs &amp; Thresholds</div>
+                <p class="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
+                  ${tool.threshold}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                class="w-full py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition ${
+                  isInteractive
+                    ? 'bg-teal-600 hover:bg-teal-700 text-white shadow-xs'
+                    : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200'
+                }"
+              >
+                <span>${isInteractive ? 'Open Interactive Calculator / Scale' : 'View Parameters & Clinical Guide'}</span>
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    // =========================================================================
+    // 5. INTERACTIVE MODAL & CALCULATOR ENGINE
+    // =========================================================================
+    function openToolModal(toolId) {
+      const tool = TOOLS.find(t => t.id === toolId);
+      if (!tool) return;
+      activeTool = tool;
+
+      // Initialize default state for this tool
+      modalState = {};
+      if (tool.type === 'selector') {
+        modalState.selectedIndex = 0;
+        modalState.isEmergency = false;
+      } else if (tool.type === 'checklist') {
+        modalState.checked = [];
+      } else if (tool.type === 'multigroup') {
+        modalState.selections = {};
+        tool.groups.forEach(g => {
+          modalState.selections[g.id] = 0; // index of option
+        });
+      }
+
+      // Header setup
+      const catObj = CATEGORIES.find(c => c.id === tool.category);
+      const style = categoryStyles[tool.category];
+      const badgeEl = document.getElementById('modalCategoryBadge');
+      badgeEl.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border mb-1.5 ${style.badge}`;
+      badgeEl.textContent = catObj.label;
+
+      document.getElementById('modalTitle').textContent = tool.name;
+      document.getElementById('modalSubtitle').textContent = tool.purpose;
+
+      renderModalContent();
+
+      const modal = document.getElementById('toolModal');
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      document.getElementById('toolModal').classList.add('hidden');
+      document.body.style.overflow = '';
+      activeTool = null;
+    }
+
+    function renderModalContent() {
+      if (!activeTool) return;
+      const body = document.getElementById('modalBody');
+      const footer = document.getElementById('modalFooter');
+
+      // --- TYPE A: SELECTOR (ASA, METs, CFS, Mallampati, Cormack-Lehane, TOF, BIS, Bromage, RASS) ---
+      if (activeTool.type === 'selector') {
+        const selectedOpt = activeTool.options[modalState.selectedIndex];
+        let emergencyHtml = '';
+        if (activeTool.hasEmergencyToggle) {
+          emergencyHtml = `
+            <label class="flex items-center justify-between p-3.5 rounded-xl border border-amber-200 dark:border-amber-800/70 bg-amber-50/70 dark:bg-amber-950/30 cursor-pointer">
+              <div>
+                <span class="text-sm font-semibold text-amber-900 dark:text-amber-200">Append Emergency Modifier ("E")</span>
+                <p class="text-xs text-amber-700 dark:text-amber-300/80">Delay in treatment would lead to a significant increase in threat to life or body part.</p>
+              </div>
+              <input
+                type="checkbox"
+                ${modalState.isEmergency ? 'checked' : ''}
+                onchange="toggleEmergencyModifier(this.checked)"
+                class="w-5 h-5 rounded text-amber-600 focus:ring-amber-500"
+              />
+            </label>
+          `;
+        }
+
+        body.innerHTML = `
+          ${emergencyHtml}
+          <div class="space-y-2.5">
+            <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Select Clinical Grade / Class</div>
+            ${activeTool.options.map((opt, idx) => {
+              const isSelected = modalState.selectedIndex === idx;
+              return `
+                <button
+                  type="button"
+                  onclick="selectOptionIndex(${idx})"
+                  class="w-full text-left p-3.5 rounded-xl border transition flex items-start gap-3 cursor-pointer ${
+                    isSelected
+                      ? 'border-teal-600 bg-teal-50/70 dark:bg-teal-950/40 dark:border-teal-500 ring-1 ring-teal-500'
+                      : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                  }"
+                >
+                  <div class="mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                    isSelected ? 'border-teal-600 bg-teal-600' : 'border-slate-400'
+                  }">
+                    ${isSelected ? '<span class="w-1.5 h-1.5 rounded-full bg-white"></span>' : ''}
+                  </div>
+                  <div class="flex-1">
+                    <div class="text-sm font-bold text-slate-900 dark:text-white">${opt.title}</div>
+                    <p class="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">${opt.desc}</p>
+                  </div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        `;
+
+        const displayValue = activeTool.hasEmergencyToggle && modalState.isEmergency
+          ? `${selectedOpt.value}E`
+          : selectedOpt.value;
+        const summaryText = `${activeTool.name}: ${displayValue} (${selectedOpt.title}) — ${selectedOpt.risk}`;
+
+        footer.innerHTML = renderResultBanner(
+          `${displayValue} — ${selectedOpt.risk}`,
+          selectedOpt.desc,
+          selectedOpt.level,
+          summaryText
+        );
+      }
+
+      // --- TYPE B: CHECKLIST (LEMON, STOP-BANG, RCRI, Apfel, Eberhart, Caprini) ---
+      else if (activeTool.type === 'checklist') {
+        const totalScore = activeTool.items
+          .filter(item => modalState.checked.includes(item.id))
+          .reduce((acc, item) => acc + item.points, 0);
+
+        const interp = activeTool.interpret(totalScore, modalState.checked);
+        const selectedLabels = activeTool.items
+          .filter(item => modalState.checked.includes(item.id))
+          .map(item => item.label);
+
+        body.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Select Applicable Criteria</span>
+            <button type="button" onclick="resetChecklist()" class="text-xs font-medium text-teal-600 dark:text-teal-400 hover:underline">Clear All</button>
+          </div>
+          <div class="space-y-2">
+            ${activeTool.items.map(item => {
+              const checked = modalState.checked.includes(item.id);
+              return `
+                <label class="flex items-start gap-3 p-3 rounded-xl border transition cursor-pointer ${
+                  checked
+                    ? 'border-teal-600 bg-teal-50/70 dark:bg-teal-950/40 dark:border-teal-500'
+                    : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                }">
+                  <input
+                    type="checkbox"
+                    ${checked ? 'checked' : ''}
+                    onchange="toggleChecklistItem('${item.id}')"
+                    class="mt-0.5 w-4 h-4 rounded text-teal-600 focus:ring-teal-500 shrink-0"
+                  />
+                  <span class="text-xs sm:text-sm text-slate-800 dark:text-slate-200 flex-1 leading-snug">${item.label}</span>
+                  <span class="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 shrink-0">
+                    +${item.points}
+                  </span>
+                </label>
+              `;
+            }).join('')}
+          </div>
+        `;
+
+        const summaryText = `${activeTool.name}: ${interp.label}. ${interp.detail}${selectedLabels.length ? ` [Factors: ${selectedLabels.join('; ')}]` : ''}`;
+        footer.innerHTML = renderResultBanner(interp.label, interp.detail, interp.level, summaryText);
+      }
+
+      // --- TYPE C: MULTI-GROUP CALCULATOR (ARISCAT, Child-Pugh, Modified Aldrete, PADSS, FLACC) ---
+      else if (activeTool.type === 'multigroup') {
+        let totalScore = 0;
+        const chosenDetails = [];
+
+        activeTool.groups.forEach(g => {
+          const optIdx = modalState.selections[g.id] || 0;
+          const opt = g.options[optIdx];
+          totalScore += opt.points;
+          chosenDetails.push(`${g.label.replace(/^\d+\.\s*/, '')}: ${opt.label}`);
+        });
+
+        const interp = activeTool.interpret(totalScore);
+
+        body.innerHTML = `
+          <div class="space-y-4">
+            ${activeTool.groups.map(g => {
+              const selectedIdx = modalState.selections[g.id] || 0;
+              return `
+                <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 space-y-2">
+                  <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">${g.label}</div>
+                  <div class="grid grid-cols-1 gap-1.5">
+                    ${g.options.map((opt, idx) => {
+                      const isSel = selectedIdx === idx;
+                      return `
+                        <button
+                          type="button"
+                          onclick="selectGroupOption('${g.id}', ${idx})"
+                          class="w-full text-left px-3 py-2 rounded-lg border text-xs flex items-center justify-between gap-2 transition cursor-pointer ${
+                            isSel
+                              ? 'border-teal-600 bg-teal-600 text-white font-semibold shadow-2xs'
+                              : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                          }"
+                        >
+                          <span>${opt.label}</span>
+                          <span class="font-mono text-[11px] px-1.5 py-0.5 rounded ${
+                            isSel ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                          }">${opt.points} pt${opt.points === 1 ? '' : 's'}</span>
+                        </button>
+                      `;
+                    }).join('')}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+            ${activeTool.footerNote ? `
+              <div class="p-3 rounded-xl bg-sky-50/80 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800/60 text-xs text-sky-900 dark:text-sky-200 leading-relaxed">
+                <strong>Clinical Note:</strong> ${activeTool.footerNote}
+              </div>
+            ` : ''}
+          </div>
+        `;
+
+        const summaryText = `${activeTool.name}: ${interp.label}. ${interp.detail} (${chosenDetails.join(' | ')})`;
+        footer.innerHTML = renderResultBanner(interp.label, interp.detail, interp.level, summaryText);
+      }
+
+      // --- TYPE D: REFERENCE (ACS NSQIP, SORT, P-POSSUM, EuroSCORE II / STS) ---
+      else if (activeTool.type === 'reference') {
+        body.innerHTML = `
+          <div class="space-y-4">
+            <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700">
+              <div class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Clinical Threshold &amp; Scope</div>
+              <p class="text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-medium">${activeTool.threshold}</p>
+            </div>
+            ${activeTool.referenceSections.map(sec => `
+              <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2">
+                <h4 class="text-sm font-bold text-teal-700 dark:text-teal-400">${sec.title}</h4>
+                <ul class="space-y-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 list-disc pl-4 leading-relaxed">
+                  ${sec.items.map(item => `<li>${item}</li>`).join('')}
+                </ul>
+              </div>
+            `).join('')}
+          </div>
+        `;
+
+        const summaryText = `${activeTool.name} (${activeTool.acronym}): ${activeTool.purpose} Key threshold: ${activeTool.threshold}`;
+        footer.innerHTML = renderResultBanner(
+          `${activeTool.acronym} — Multivariable Risk Model`,
+          'Requires institutional or online regression model interface for exact patient-level probability calculation.',
+          'neutral',
+          summaryText
+        );
+      }
+    }
+
+    function renderResultBanner(headline, detail, level, copyPayload) {
+      const levelThemes = {
+        low: 'bg-emerald-50 border-emerald-200 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-800/70 dark:text-emerald-200',
+        moderate: 'bg-amber-50 border-amber-200 text-amber-900 dark:bg-amber-950/40 dark:border-amber-800/70 dark:text-amber-200',
+        high: 'bg-rose-50 border-rose-200 text-rose-900 dark:bg-rose-950/40 dark:border-rose-800/70 dark:text-rose-200',
+        neutral: 'bg-slate-100 border-slate-200 text-slate-900 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100'
+      };
+      const themeClass = levelThemes[level] || levelThemes.neutral;
+      // Safely encode string for onclick attribute
+      const encodedPayload = encodeURIComponent(copyPayload);
+
+      return `
+        <div class="p-3.5 rounded-xl border ${themeClass}">
+          <div class="text-sm font-bold leading-snug">${headline}</div>
+          <p class="text-xs mt-1 opacity-90 leading-relaxed">${detail}</p>
+        </div>
+        <div class="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onclick="closeModal()"
+            class="px-4 py-2 rounded-xl text-xs font-semibold border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
+          >
+            Close
+          </button>
+          <button
+            type="button"
+            onclick="copyClinicalSummary('${encodedPayload}')"
+            class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-teal-600 hover:bg-teal-700 text-white shadow-xs transition cursor-pointer"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+            </svg>
+            <span>Copy Result for Charting</span>
+          </button>
+        </div>
+      `;
+    }
+
+    // =========================================================================
+    // 6. INTERACTIVE MODAL EVENT HANDLERS & CLIPBOARD
+    // =========================================================================
+    function selectOptionIndex(idx) {
+      modalState.selectedIndex = idx;
+      renderModalContent();
+    }
+
+    function toggleEmergencyModifier(isChecked) {
+      modalState.isEmergency = isChecked;
+      renderModalContent();
+    }
+
+    function toggleChecklistItem(itemId) {
+      if (modalState.checked.includes(itemId)) {
+        modalState.checked = modalState.checked.filter(id => id !== itemId);
+      } else {
+        modalState.checked.push(itemId);
+      }
+      renderModalContent();
+    }
+
+    function resetChecklist() {
+      modalState.checked = [];
+      renderModalContent();
+    }
+
+    function selectGroupOption(groupId, optionIdx) {
+      modalState.selections[groupId] = optionIdx;
+      renderModalContent();
+    }
+
+    function copyClinicalSummary(encodedText) {
+      const text = decodeURIComponent(encodedText);
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Copied formatted clinical result to clipboard');
+      } catch (err) {
+        showToast('Unable to copy automatically — please select and copy text');
+      }
+      document.body.removeChild(textarea);
+    }
+
+    let toastTimeout = null;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMessage').textContent = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2800);
+    }
+  </script>
+</body>
+</html>
