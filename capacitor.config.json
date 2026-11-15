@@ -1,1 +1,7 @@
+{
+  "appId": "com.nkscoring.app",
+  "appName": "Risk & Scoring Predictor",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
 
